@@ -1,0 +1,13 @@
+{
+  "name": "signature-pdf",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "pdf-lib": "^1.17.1"
+  }
+}
