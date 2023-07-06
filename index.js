@@ -32,20 +32,88 @@ function decrypt(signature, password){
 async function modifyPdf(fileName, signature) {
   const existingPdfBytes = readFile(fileName);
   const pdfDoc = await PDFDocument.load(existingPdfBytes)
+  const helveticaFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
   const svgPaths = getSvgPath(signature);
 
   const pages = pdfDoc.getPages()
-  const firstPage = pages[0]
 
-  firstPage.moveTo(100, firstPage.getHeight() - 5)
-  
-  firstPage.moveDown(546)
-  svgPaths.forEach(svgPath => {
-    firstPage.drawSvgPath(svgPath, { scale: 0.15 })
+  // PREPARED
+  pages.forEach(page => {
+    putSign(
+      page,
+      { x: 40, y: 40, signPos: -10 },
+      helveticaFont,
+      'PREPARED',
+      'admin',
+      '2023-07-06',
+      svgPaths,
+    );
+  });
+
+  // CHECKED
+  pages.forEach(page => {
+    putSign(
+      page,
+      { x: 370, y: 40, signPos: 320 },
+      helveticaFont,
+      'CHECKED',
+      'admin',
+      '2023-07-06',
+      svgPaths,
+    );
+  });
+
+  // APPROVED
+  pages.forEach(page => {
+    putSign(
+      page,
+      { x: 700, y: 40, signPos: 650 },
+      helveticaFont,
+      'APPROVED',
+      'admin',
+      '2023-07-06',
+      svgPaths,
+    );
   });
 
   const pdfBytes = await pdfDoc.save();
   return pdfBytes;
+}
+
+function putSign(page, coordinates, font, state, username, date, svgPaths){
+  const fontSize = 6;
+  let { x, y, signPos } = coordinates;
+
+  page.moveTo(100, page.getHeight() - 5)
+
+  page.drawText(`${state} BY:`, {
+    x,
+    y,
+    size: fontSize,
+    font,
+  })
+
+  y -= 15;
+  page.drawText(`Name: ${username}`, {
+    x,
+    y,
+    size: fontSize,
+    font,
+  })
+
+  y -= 10;
+  page.drawText(`Date: ${date}`, {
+    x,
+    y,
+    size: fontSize,
+    font,
+  })
+  
+  page.moveDown(546);
+  page.moveRight(signPos);
+  svgPaths.forEach(svgPath => {
+    page.drawSvgPath(svgPath, { scale: 0.15 })
+  });
 }
 
 function getSvgPath(signature){
@@ -70,6 +138,6 @@ function readFile(fileName){
 function writeFile(arrayBuffer, fileName){
   const buffer = Buffer.from(arrayBuffer);
   try {
-    fs.appendFileSync(path.join(__dirname, '/storage', fileName), buffer);
+    fs.writeFileSync(path.join(__dirname, '/storage', fileName), buffer);
   } catch(err) { console.error(err) }
 }
